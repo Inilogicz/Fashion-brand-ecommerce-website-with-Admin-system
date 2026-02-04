@@ -29,8 +29,13 @@ enum PaymentStatus {
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
-  password  String?  // Optional for now (if using magic links/OAuth later), but needed for creds
+  password  String?
   name      String?
+  phone     String?
+  address   String?
+  city      String?
+  zip       String?
+  country   String?  @default("Nigeria")
   role      Role     @default(USER)
   orders    Order[]
   createdAt DateTime @default(now())
