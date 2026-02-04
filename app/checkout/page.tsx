@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCart } from "@/context/cart-context";
-import { ArrowLeft, Check, Lock, CreditCard } from "lucide-react";
+import { ArrowLeft, Check, Lock, CreditCard, ShoppingBag } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
