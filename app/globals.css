@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+@theme {
+  --color-obsidian: #0C0C0C;
+  --color-cream: #F4F1E7;
+  --color-beige: #D9CFC1;
+  --color-sand: #C2A891;
+  --color-cocoa: #4B3621;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-playfair), ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+
+  --animate-fade-in: fade-in 0.5s ease-out;
+  --animate-slide-up: slide-up 0.7s ease-out;
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+/* Custom Utilities for Editorial Feel */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Base Styles */
+body {
+  background-color: var(--color-cream);
+  color: var(--color-obsidian);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  /* Editorial look usually lighter */
+  letter-spacing: -0.02em;
+}
