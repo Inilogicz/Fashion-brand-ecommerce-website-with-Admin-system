@@ -8,7 +8,7 @@ import { useState } from "react";
 
 import { useCart } from "@/context/cart-context";
 
-export function Navbar() {
+export function Navbar({ user }: { user?: any }) {
     const pathname = usePathname();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const { cartCount, setIsCartOpen } = useCart();
@@ -64,14 +64,29 @@ export function Navbar() {
 
                 {/* Icons */}
                 <div className="flex flex-1 justify-end gap-4">
-                    <button className="relative" onClick={() => setIsCartOpen(true)}>
-                        <ShoppingBag className="h-5 w-5 text-obsidian" />
-                        {cartCount > 0 && (
-                            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-cocoa text-[10px] text-white">
-                                {cartCount}
-                            </span>
+                    <div className="flex items-center gap-4">
+                        {/* User Check */}
+                        {user ? (
+                            <Link href="/account" className="text-obsidian/60 hover:text-obsidian" title="Account">
+                                <span className="sr-only">Account</span>
+                                {/* User Icon */}
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-user"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+                            </Link>
+                        ) : (
+                            <Link href="/login" className="text-sm font-medium text-obsidian/60 hover:text-obsidian whitespace-nowrap">
+                                Sign In
+                            </Link>
                         )}
-                    </button>
+
+                        <button className="relative" onClick={() => setIsCartOpen(true)}>
+                            <ShoppingBag className="h-5 w-5 text-obsidian" />
+                            {cartCount > 0 && (
+                                <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-cocoa text-[10px] text-white">
+                                    {cartCount}
+                                </span>
+                            )}
+                        </button>
+                    </div>
                 </div>
             </div>
 

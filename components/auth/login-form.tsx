@@ -6,9 +6,9 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 
-export default function LoginForm() {
+export default function LoginForm({ defaultRedirect }: { defaultRedirect?: string }) {
     const searchParams = useSearchParams();
-    const callbackUrl = searchParams.get('callbackUrl');
+    const callbackUrl = searchParams.get('callbackUrl') || defaultRedirect;
 
     const [errorMessage, formAction, isPending] = useActionState(
         authenticate,

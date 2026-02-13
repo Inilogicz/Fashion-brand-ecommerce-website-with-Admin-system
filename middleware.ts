@@ -1,53 +1,73 @@
 import NextAuth from "next-auth";
 import { authConfig } from "./auth.config";
 import { NextResponse } from "next/server";
+import { type NextRequest } from "next/server";
+import { updateAdminSession } from "./lib/admin-auth-edge";
+import { jwtVerify } from "jose";
 
 const { auth } = NextAuth(authConfig);
 
-export default auth((req) => {
-    const { nextUrl } = req;
-    const isLoggedIn = !!req.auth;
-    const user = req.auth?.user;
+const SECRET_KEY = process.env.AUTH_SECRET || "default_super_secret_key_change_me";
+const key = new TextEncoder().encode(SECRET_KEY);
 
-    const isApiAuthRoute = nextUrl.pathname.startsWith('/api/auth');
-    const isAuthRoute = nextUrl.pathname === '/login' || nextUrl.pathname === '/signup' || nextUrl.pathname === '/auth/login' || nextUrl.pathname === '/auth/signup' || nextUrl.pathname === '/admin/login';
-    const isAdminRoute = nextUrl.pathname.startsWith('/admin') && nextUrl.pathname !== '/admin/login';
-
-    if (isApiAuthRoute) {
-        return NextResponse.next();
+async function verifyAdminSession(request: NextRequest) {
+    const session = request.cookies.get("admin_session")?.value;
+    if (!session) return null;
+    try {
+        const { payload } = await jwtVerify(session, key, {
+            algorithms: ["HS256"],
+        });
+        return payload;
+    } catch (error) {
+        return null;
     }
+}
+
+export default auth(async (req) => {
+    const { nextUrl } = req;
+
+    // Admin Route Protection
+    if (nextUrl.pathname.startsWith('/admin')) {
+        const adminSession = await verifyAdminSession(req);
+        const isLoginPage = nextUrl.pathname === '/admin/login';
+
+        if (isLoginPage) {
+            if (adminSession) {
+                return NextResponse.redirect(new URL('/admin', nextUrl));
+            }
+            return NextResponse.next();
+        }
+
+        if (!adminSession) {
+            const loginUrl = new URL('/admin/login', nextUrl);
+            loginUrl.searchParams.set('callbackUrl', nextUrl.href);
+            return NextResponse.redirect(loginUrl);
+        }
+
+        return await updateAdminSession(req)!;
+    }
+
+    // Existing User Auth Logic (simplified as Admin is now separate)
+    const isLoggedIn = !!req.auth;
+    const isAuthRoute = nextUrl.pathname === '/login' || nextUrl.pathname === '/signup';
+    const isProtectedRoute = nextUrl.pathname.startsWith('/checkout') || nextUrl.pathname.startsWith('/account');
 
     if (isAuthRoute) {
         if (isLoggedIn) {
-            // Redirect to dashboard or home if already logged in
-            // Adjust redirection based on role?
-            if (user?.role === 'ADMIN') {
-                return NextResponse.redirect(new URL('/admin', nextUrl));
-            }
-            if (nextUrl.pathname === '/admin/login') {
-                // If logged in, redirect to admin dashboard. 
-                // The Admin Layout will handle role verification and kick back non-admins.
-                return NextResponse.redirect(new URL('/admin', nextUrl));
-            }
             return NextResponse.redirect(new URL('/', nextUrl));
         }
         return NextResponse.next();
     }
 
-    if (isAdminRoute) {
+    if (isProtectedRoute) {
         if (!isLoggedIn) {
-            const loginUrl = new URL('/admin/login', nextUrl);
-            loginUrl.searchParams.set('callbackUrl', nextUrl.href);
-            return NextResponse.redirect(loginUrl);
+            return NextResponse.redirect(new URL('/login', nextUrl));
         }
-        // Role verification moved to Admin Layout because req.auth.user.role 
-        // is not reliably available in Edge Middleware context.
     }
 
     return NextResponse.next();
 });
 
 export const config = {
-    // https://nextjs.org/docs/app/building-your-application/routing/middleware#matcher
     matcher: ['/((?!api|_next/static|_next/image|.*\\.png$).*)'],
 };

@@ -23,7 +23,13 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
                 <p className="text-obsidian/60">Update product details.</p>
             </div>
 
-            <ProductForm categories={categories} product={product} />
+            <ProductForm
+                categories={categories}
+                product={{
+                    ...product,
+                    price: Number(product.price)
+                }}
+            />
         </div>
     );
 }

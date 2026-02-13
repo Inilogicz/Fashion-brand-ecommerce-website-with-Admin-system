@@ -1,15 +1,19 @@
 "use client";
 
-import { useActionState } from "react";
+import { useState, useActionState } from "react";
 import { createProduct, updateProduct } from "@/lib/admin-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
+import { ImageUpload } from "./image-upload";
 
 export function ProductForm({ categories, product }: { categories: any[], product?: any }) {
     const initialState = { message: "", errors: {} };
     const actionFn = product ? updateProduct.bind(null, product.id) : createProduct;
     const [state, action, isPending] = useActionState(actionFn, initialState);
+
+    // Initialize images state from product or empty array
+    const [images, setImages] = useState<string[]>(product?.images || []);
 
     return (
         <form action={action} className="space-y-6 bg-white p-6 rounded-md border border-beige/20 shadow-sm max-w-2xl">
@@ -71,55 +75,16 @@ export function ProductForm({ categories, product }: { categories: any[], produc
 
             <div className="space-y-4">
                 <label className="text-sm font-medium text-obsidian">Images</label>
-
-                {/* Upload Section */}
-                <div className="flex items-center gap-4">
-                    <Input
-                        type="file"
-                        accept="image/*"
-                        onChange={async (e) => {
-                            const file = e.target.files?.[0];
-                            if (!file) return;
-
-                            const formData = new FormData();
-                            formData.append("file", file);
-
-                            // You might want to add a loading state here
-                            const btn = e.target as HTMLInputElement;
-                            const prevLabel = btn.previousElementSibling?.textContent;
-
-                            try {
-                                const res = await fetch("/api/upload", {
-                                    method: "POST",
-                                    body: formData,
-                                });
-                                const data = await res.json();
-                                if (data.url) {
-                                    // Append URL to the images input
-                                    const imagesInput = document.querySelector('input[name="images"]') as HTMLInputElement;
-                                    if (imagesInput) {
-                                        const currentVal = imagesInput.value;
-                                        imagesInput.value = currentVal ? `${currentVal}, ${data.url}` : data.url;
-                                    }
-                                } else {
-                                    alert("Upload failed");
-                                }
-                            } catch (err) {
-                                alert("Upload error");
-                            }
-                            // Reset file input
-                            e.target.value = "";
-                        }}
+                <div className="bg-beige/10 p-4 rounded-md border border-beige/20">
+                    <ImageUpload
+                        value={images}
+                        onChange={(newImages) => setImages(newImages)}
+                        onRemove={(urlToRemove) => setImages(images.filter((url) => url !== urlToRemove))}
                     />
-                    <span className="text-xs text-obsidian/50">Select an image to upload and append URL.</span>
+                    {/* Hidden input to pass data to server action */}
+                    <input type="hidden" name="images" value={images.join(",")} />
                 </div>
-
-                <div className="space-y-2">
-                    <label className="text-sm font-medium text-obsidian">Image URLs (Comma separated)</label>
-                    <Input name="images" defaultValue={product?.images?.join(", ") || ""} placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg" />
-                    <p className="text-xs text-obsidian/50">Enter full URLs separated by commas. Uploaded images will appear here.</p>
-                    {state?.errors?.images && <p className="text-red-500 text-xs">{state.errors.images}</p>}
-                </div>
+                {state?.errors?.images && <p className="text-red-500 text-xs">{state.errors.images}</p>}
             </div>
 
             {state?.message && (

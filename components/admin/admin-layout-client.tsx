@@ -12,7 +12,7 @@ import {
     Settings,
     LogOut
 } from "lucide-react";
-import { signOutAction } from "@/lib/auth-actions";
+import { logoutAdmin } from "@/lib/admin-auth";
 
 export function AdminSidebar() {
     const pathname = usePathname();
@@ -56,7 +56,9 @@ export function AdminSidebar() {
                 </nav>
 
                 <div className="mt-auto p-4 border-t border-beige/20">
-                    <form action={() => signOutAction()}>
+                    <form action={async () => {
+                        await logoutAdmin();
+                    }}>
                         <button
                             type="submit"
                             className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"

@@ -23,18 +23,22 @@ export const metadata: Metadata = {
 import { CartProvider } from "@/context/cart-context";
 import { CartDrawer } from "@/components/shop/cart-sheet";
 
-export default function RootLayout({
+import { auth } from "@/auth";
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await auth();
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body
         className={`${inter.variable} ${playfair.variable} antialiased bg-cream text-obsidian font-sans`}
       >
         <CartProvider>
-          <Navbar />
+          <Navbar user={session?.user} />
           <CartDrawer />
           <main className="min-h-screen">
             {children}

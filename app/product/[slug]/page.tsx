@@ -1,10 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Star, Truck, ShieldCheck } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ProductActions } from "@/components/shop/product-actions";
 import { getProductBySlug } from "@/lib/shop-actions";
+import { ProductGallery } from "@/components/shop/product-gallery";
 
 export const dynamic = 'force-dynamic';
 
@@ -35,28 +35,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24">
                     {/* Image Gallery (Left) */}
-                    <div className="space-y-4">
-                        <div className="relative aspect-[3/4] w-full overflow-hidden bg-beige/20 rounded-sm">
-                            <Image
-                                src={mainImage}
-                                alt={product.name}
-                                fill
-                                className="object-cover"
-                                priority
-                                sizes="(max-width: 1024px) 100vw, 50vw"
-                            />
-                        </div>
-                        {/* Thumbnail grid would go here if we had more images */}
-                        {product.images.length > 1 && (
-                            <div className="grid grid-cols-4 gap-4">
-                                {product.images.map((img: string, idx: number) => (
-                                    <div key={idx} className="relative aspect-square bg-beige/10 overflow-hidden cursor-pointer">
-                                        <Image src={img} alt={`${product.name} ${idx}`} fill className="object-cover" />
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
+                    <ProductGallery images={product.images} name={product.name} />
 
                     {/* Product Info (Right) */}
                     <div className="flex flex-col justify-center">

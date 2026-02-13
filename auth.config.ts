@@ -8,17 +8,7 @@ export const authConfig = {
     callbacks: {
         authorized({ auth, request: { nextUrl } }) {
             const isLoggedIn = !!auth?.user;
-            const isOnAdmin = nextUrl.pathname.startsWith("/admin") && nextUrl.pathname !== "/admin/login";
             const isOnProtected = nextUrl.pathname.startsWith("/checkout") || nextUrl.pathname.startsWith("/account");
-
-            if (isOnAdmin) {
-                if (!isLoggedIn) {
-                    // Redirect unauthenticated users to login page
-                    return false;
-                }
-
-                return true; // Login check handled above, role check handled in middleware
-            }
 
             if (isOnProtected) {
                 if (!isLoggedIn) return false;
@@ -27,6 +17,20 @@ export const authConfig = {
 
             return true;
         },
+        async jwt({ token, user }) {
+            if (user) {
+                token.role = user.role;
+                token.id = user.id as string;
+            }
+            return token;
+        },
+        async session({ session, token }) {
+            if (token && session.user) {
+                session.user.role = token.role as any;
+                session.user.id = (token.id || '') as string;
+            }
+            return session;
+        }
     },
     providers: [], // Add providers with an empty array for now
 } satisfies NextAuthConfig;

@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 import { Plus, Search, MoreHorizontal, Edit, Trash } from "lucide-react";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
@@ -49,6 +50,7 @@ export default async function AdminProductsPage() {
                 <Table>
                     <TableHeader>
                         <TableRow>
+                            <TableHead>Image</TableHead>
                             <TableHead>Name</TableHead>
                             <TableHead>Category</TableHead>
                             <TableHead>Price</TableHead>
@@ -67,6 +69,20 @@ export default async function AdminProductsPage() {
                         ) : (
                             products.map((product) => (
                                 <TableRow key={product.id}>
+                                    <TableCell>
+                                        <div className="relative h-12 w-12 overflow-hidden rounded-md bg-beige/20">
+                                            {product.images[0] ? (
+                                                <Image
+                                                    src={product.images[0]}
+                                                    alt={product.name}
+                                                    fill
+                                                    className="object-cover"
+                                                />
+                                            ) : (
+                                                <div className="flex h-full w-full items-center justify-center text-xs text-obsidian/40">No Img</div>
+                                            )}
+                                        </div>
+                                    </TableCell>
                                     <TableCell className="font-medium">{product.name}</TableCell>
                                     <TableCell>{product.category.name}</TableCell>
                                     <TableCell>{formatPrice(product.price.toString())}</TableCell>

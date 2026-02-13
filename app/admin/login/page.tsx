@@ -1,12 +1,11 @@
-import LoginForm from '@/components/auth/login-form';
+import AdminLoginForm from '@/components/admin/admin-login-form';
 import { Metadata } from 'next';
+import { Suspense } from 'react';
 
 export const metadata: Metadata = {
     title: 'Admin Login | Dion Luxe',
     description: 'Login to the admin dashboard',
 };
-
-import { Suspense } from 'react';
 
 export default function AdminLoginPage() {
     return (
@@ -16,8 +15,9 @@ export default function AdminLoginPage() {
                     <h1 className="text-2xl font-serif text-obsidian">Admin Portal</h1>
                     <p className="text-sm text-obsidian/60">Enter your credentials to access the dashboard</p>
                 </div>
+
                 <Suspense fallback={<div>Loading...</div>}>
-                    <LoginForm />
+                    <AdminLoginForm />
                 </Suspense>
             </div>
         </div>

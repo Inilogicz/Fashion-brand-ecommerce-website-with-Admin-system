@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { CopyButton } from "@/components/ui/copy-button";
 import { getOrderById } from "@/lib/order-actions";
 import { Check, ShoppingBag } from "lucide-react";
 import Link from "next/link";
@@ -30,9 +31,11 @@ export default async function OrderSuccessPage({ params, searchParams }: { param
             <span className="text-xs font-bold tracking-widest text-obsidian/40 uppercase mb-4">Order Confirmed</span>
             <h1 className="text-4xl font-serif text-obsidian mb-4">Thank you, {order.firstName}.</h1>
 
-            <p className="text-obsidian/60 mb-8 max-w-md text-lg font-light">
-                We've received your order <span className="font-medium text-obsidian">#{order.id.slice(-6).toUpperCase()}</span> and sent a confirmation email to {order.guestEmail}.
-            </p>
+            <div className="text-obsidian/60 mb-8 max-w-md text-lg font-light flex flex-col items-center gap-2">
+                <span>We've received your order</span>
+                <CopyButton value={order.id} className="font-mono text-xs h-auto py-2 px-4 shadow-sm w-full max-w-[280px] break-all" />
+                <span>and sent a confirmation email to {order.guestEmail}.</span>
+            </div>
 
             <div className="bg-white p-6 rounded-sm border border-beige/20 w-full max-w-md mb-8 text-left">
                 <h3 className="text-sm font-medium text-obsidian mb-4 border-b border-beige/10 pb-2">Order Details</h3>

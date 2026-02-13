@@ -33,7 +33,10 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
                     )}
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     priority={priority}
-                    onLoadingComplete={(image) => image.classList.remove("opacity-0")}
+                    onLoad={(event) => {
+                        const img = event.target as HTMLImageElement;
+                        img.classList.remove("opacity-0");
+                    }}
                 />
 
                 {/* Overlay on hover */}
