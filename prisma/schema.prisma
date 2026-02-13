@@ -1,10 +1,12 @@
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
 }
 
 enum Role {
@@ -66,6 +68,7 @@ model Product {
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   isFeatured  Boolean     @default(false)
+  sizes       String[]    @default([])
 }
 
 model Order {
@@ -73,7 +76,15 @@ model Order {
   userId        String?       // Optional for guest checkout
   user          User?         @relation(fields: [userId], references: [id])
   guestEmail    String?       // Assuming guest checkout support
-  guestName     String?
+  // Shipping Details (Snapshot for this order)
+  firstName     String?
+  lastName      String?
+  phone         String?
+  address       String?
+  city          String?
+  zip           String?
+  country       String?       @default("Nigeria")
+  
   total         Decimal
   status        OrderStatus   @default(PENDING)
   paymentStatus PaymentStatus @default(PENDING)

@@ -1,14 +1,26 @@
 import { Button } from "@/components/ui/button";
 import { Search, Eye } from "lucide-react";
+import Link from "next/link";
+import { prisma } from "@/lib/db";
 
-const ORDERS = [
-    { id: "ORD-001", customer: "Alice Smith", date: "Oct 24, 2023", total: "₦1,350,000", status: "Paid", fulfillment: "Fulfilled" },
-    { id: "ORD-002", customer: "Bob Jones", date: "Oct 24, 2023", total: "₦450,000", status: "Paid", fulfillment: "Processing" },
-    { id: "ORD-003", customer: "Charlie Brown", date: "Oct 23, 2023", total: "₦920,000", status: "Pending", fulfillment: "Unfulfilled" },
-    { id: "ORD-004", customer: "Diana Prince", date: "Oct 21, 2023", total: "₦2,100,000", status: "Paid", fulfillment: "Fulfilled" },
-];
+export const dynamic = 'force-dynamic';
 
-export default function AdminOrdersPage() {
+// Helper to format currency
+const formatPrice = (amount: number | string) => {
+    return new Intl.NumberFormat('en-NG', {
+        style: 'currency',
+        currency: 'NGN',
+    }).format(Number(amount));
+};
+
+export default async function AdminOrdersPage() {
+    const orders = await prisma.order.findMany({
+        include: {
+            user: true,
+        },
+        orderBy: { createdAt: "desc" },
+    });
+
     return (
         <div className="space-y-8">
             <div className="flex items-center justify-between">
@@ -35,38 +47,57 @@ export default function AdminOrdersPage() {
                             <TableHead>Customer</TableHead>
                             <TableHead>Date</TableHead>
                             <TableHead>Total</TableHead>
+                            <TableHead>Status</TableHead>
                             <TableHead>Payment</TableHead>
-                            <TableHead>Fulfillment</TableHead>
                             <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {ORDERS.map((order) => (
-                            <TableRow key={order.id}>
-                                <TableCell className="font-medium">{order.id}</TableCell>
-                                <TableCell>{order.customer}</TableCell>
-                                <TableCell>{order.date}</TableCell>
-                                <TableCell>{order.total}</TableCell>
-                                <TableCell>
-                                    <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${order.status === "Paid" ? "bg-green-50 text-green-700" : "bg-orange-50 text-orange-700"
-                                        }`}>
-                                        {order.status}
-                                    </span>
-                                </TableCell>
-                                <TableCell>
-                                    <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${order.fulfillment === "Fulfilled" ? "bg-blue-50 text-blue-700" :
-                                        order.fulfillment === "Processing" ? "bg-yellow-50 text-yellow-700" : "bg-gray-100 text-gray-700"
-                                        }`}>
-                                        {order.fulfillment}
-                                    </span>
-                                </TableCell>
-                                <TableCell className="text-right">
-                                    <Button variant="ghost" size="icon">
-                                        <Eye className="h-4 w-4" />
-                                    </Button>
+                        {orders.length === 0 ? (
+                            <TableRow>
+                                <TableCell className="text-center text-obsidian/50" colSpan={7}>
+                                    No orders found.
                                 </TableCell>
                             </TableRow>
-                        ))}
+                        ) : (
+                            orders.map((order) => (
+                                <TableRow key={order.id}>
+                                    <TableCell className="font-medium">{order.id.slice(-6).toUpperCase()}</TableCell>
+                                    <TableCell>
+                                        <div>
+                                            <p className="font-medium">{order.user?.name || (order.firstName ? `${order.firstName} ${order.lastName}` : "Guest")}</p>
+                                            <p className="text-xs text-obsidian/50">{order.user?.email || order.guestEmail}</p>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
+                                    <TableCell>{formatPrice(order.total.toString())}</TableCell>
+                                    <TableCell>
+                                        <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${order.status === "DELIVERED" ? "bg-green-50 text-green-700" :
+                                            order.status === "CANCELLED" ? "bg-red-50 text-red-700" :
+                                                order.status === "SHIPPED" ? "bg-blue-50 text-blue-700" :
+                                                    "bg-yellow-50 text-yellow-700"
+                                            }`}>
+                                            {order.status}
+                                        </span>
+                                    </TableCell>
+                                    <TableCell>
+                                        <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${order.paymentStatus === "PAID" ? "bg-green-50 text-green-700" :
+                                            order.paymentStatus === "FAILED" ? "bg-red-50 text-red-700" :
+                                                "bg-yellow-50 text-yellow-700"
+                                            }`}>
+                                            {order.paymentStatus}
+                                        </span>
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <Link href={`/admin/orders/${order.id}`}>
+                                            <Button variant="ghost" size="icon">
+                                                <Eye className="h-4 w-4" />
+                                            </Button>
+                                        </Link>
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        )}
                     </TableBody>
                 </Table>
             </div>
@@ -91,10 +122,10 @@ function TableRow({ children }: { children: React.ReactNode }) {
     return <tr className="border-b border-beige/10 transition-colors hover:bg-beige/5 data-[state=selected]:bg-muted">{children}</tr>
 }
 
-function TableHead({ children, className }: { children: React.ReactNode, className?: string }) {
-    return <th className={`h-12 px-4 text-left align-middle font-medium text-obsidian/60 [&:has([role=checkbox])]:pr-0 ${className}`}>{children}</th>
+function TableHead({ children, className }: { children: React.ReactNode, className?: string, colSpan?: number }) {
+    return <th colSpan={className?.includes("colSpan") ? undefined : undefined} className={`h-12 px-4 text-left align-middle font-medium text-obsidian/60 [&:has([role=checkbox])]:pr-0 ${className}`}>{children}</th>
 }
 
-function TableCell({ children, className }: { children: React.ReactNode, className?: string }) {
-    return <td className={`p-4 align-middle [&:has([role=checkbox])]:pr-0 text-obsidian ${className}`}>{children}</td>
+function TableCell({ children, className, colSpan }: { children: React.ReactNode, className?: string, colSpan?: number }) {
+    return <td colSpan={colSpan} className={`p-4 align-middle [&:has([role=checkbox])]:pr-0 text-obsidian ${className}`}>{children}</td>
 }

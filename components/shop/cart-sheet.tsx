@@ -115,9 +115,11 @@ export function CartDrawer() {
                                     <span className="text-lg font-serif font-bold text-obsidian">₦{cartTotal.toLocaleString()}</span>
                                 </div>
                                 <p className="text-xs text-obsidian/50 mb-6 text-center">Shipping and taxes calculated at checkout.</p>
-                                <Button className="w-full py-6 text-base bg-obsidian hover:bg-cocoa uppercase tracking-widest text-cream">
-                                    Checkout
-                                </Button>
+                                <Link href="/checkout" onClick={() => setIsCartOpen(false)}>
+                                    <Button className="w-full py-6 text-base bg-obsidian hover:bg-cocoa uppercase tracking-widest text-cream">
+                                        Checkout
+                                    </Button>
+                                </Link>
                             </div>
                         )}
                     </motion.div>

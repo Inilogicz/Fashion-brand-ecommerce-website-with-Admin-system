@@ -17,6 +17,8 @@ interface ProductActionsProps {
     };
 }
 
+import { SizeGuide } from "@/components/shop/size-guide";
+
 export function ProductActions({ product }: ProductActionsProps) {
     const [selectedSize, setSelectedSize] = useState<string | null>(null);
     const { addItem } = useCart();
@@ -44,7 +46,7 @@ export function ProductActions({ product }: ProductActionsProps) {
             <div className="mb-10">
                 <div className="flex justify-between items-center mb-4">
                     <span className="text-sm font-medium text-obsidian">Select Size</span>
-                    <button className="text-xs text-obsidian/60 underline hover:text-obsidian">Size Guide</button>
+                    <SizeGuide />
                 </div>
                 <div className="flex gap-3">
                     {product.sizes.map((size) => (

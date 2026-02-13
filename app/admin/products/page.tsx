@@ -1,14 +1,27 @@
 import { Button } from "@/components/ui/button";
 import { Plus, Search, MoreHorizontal, Edit, Trash } from "lucide-react";
+import Link from "next/link";
+import { prisma } from "@/lib/db";
+import { DeleteProductButton } from "@/components/admin/delete-product-button";
 
-const PRODUCTS = [
-    { id: 1, name: "Obsidian Trench Coat", price: "₦850,000", stock: 12, category: "Outerwear", status: "Active" },
-    { id: 2, name: "Silk Essence Dress", price: "₦450,000", stock: 25, category: "Dresses", status: "Active" },
-    { id: 3, name: "Minimalist Leather Tote", price: "₦320,000", stock: 8, category: "Accessories", status: "Active" },
-    { id: 4, name: "Cashmere Turtleneck", price: "₦290,000", stock: 0, category: "Knitwear", status: "Out of Stock" },
-];
+export const dynamic = 'force-dynamic';
 
-export default function AdminProductsPage() {
+// Helper to format currency if not available in utils
+const formatPrice = (amount: number | string) => {
+    return new Intl.NumberFormat('en-NG', {
+        style: 'currency',
+        currency: 'NGN',
+    }).format(Number(amount));
+};
+
+export default async function AdminProductsPage() {
+    const products = await prisma.product.findMany({
+        include: {
+            category: true,
+        },
+        orderBy: { createdAt: "desc" },
+    });
+
     return (
         <div className="space-y-8">
             <div className="flex items-center justify-between">
@@ -16,9 +29,11 @@ export default function AdminProductsPage() {
                     <h2 className="text-3xl font-serif font-medium text-obsidian">Products</h2>
                     <p className="text-obsidian/60">Manage your product catalog.</p>
                 </div>
-                <Button className="gap-2">
-                    <Plus className="h-4 w-4" /> Add Product
-                </Button>
+                <Link href="/admin/products/new">
+                    <Button className="gap-2">
+                        <Plus className="h-4 w-4" /> Add Product
+                    </Button>
+                </Link>
             </div>
 
             <div className="rounded-md border border-beige/20 bg-white">
@@ -43,30 +58,38 @@ export default function AdminProductsPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {PRODUCTS.map((product) => (
-                            <TableRow key={product.id}>
-                                <TableCell className="font-medium">{product.name}</TableCell>
-                                <TableCell>{product.category}</TableCell>
-                                <TableCell>{product.price}</TableCell>
-                                <TableCell>{product.stock}</TableCell>
-                                <TableCell>
-                                    <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${product.status === "Active" ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
-                                        }`}>
-                                        {product.status}
-                                    </span>
-                                </TableCell>
-                                <TableCell className="text-right">
-                                    <div className="flex justify-end gap-2">
-                                        <button className="p-2 hover:bg-beige/20 rounded-full text-obsidian/60 hover:text-obsidian">
-                                            <Edit className="h-4 w-4" />
-                                        </button>
-                                        <button className="p-2 hover:bg-red-50 rounded-full text-obsidian/60 hover:text-red-600">
-                                            <Trash className="h-4 w-4" />
-                                        </button>
-                                    </div>
+                        {products.length === 0 ? (
+                            <TableRow>
+                                <TableCell className="text-center text-obsidian/50" colSpan={6}>
+                                    No products found.
                                 </TableCell>
                             </TableRow>
-                        ))}
+                        ) : (
+                            products.map((product) => (
+                                <TableRow key={product.id}>
+                                    <TableCell className="font-medium">{product.name}</TableCell>
+                                    <TableCell>{product.category.name}</TableCell>
+                                    <TableCell>{formatPrice(product.price.toString())}</TableCell>
+                                    <TableCell>{product.stock}</TableCell>
+                                    <TableCell>
+                                        <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${product.stock > 0 ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
+                                            }`}>
+                                            {product.stock > 0 ? "Active" : "Out of Stock"}
+                                        </span>
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <div className="flex justify-end gap-2">
+                                            <Link href={`/admin/products/${product.id}`}>
+                                                <button className="p-2 hover:bg-beige/20 rounded-full text-obsidian/60 hover:text-obsidian">
+                                                    <Edit className="h-4 w-4" />
+                                                </button>
+                                            </Link>
+                                            <DeleteProductButton id={product.id} />
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        )}
                     </TableBody>
                 </Table>
             </div>
@@ -91,10 +114,10 @@ function TableRow({ children }: { children: React.ReactNode }) {
     return <tr className="border-b border-beige/10 transition-colors hover:bg-beige/5 data-[state=selected]:bg-muted">{children}</tr>
 }
 
-function TableHead({ children, className }: { children: React.ReactNode, className?: string }) {
-    return <th className={`h-12 px-4 text-left align-middle font-medium text-obsidian/60 [&:has([role=checkbox])]:pr-0 ${className}`}>{children}</th>
+function TableHead({ children, className }: { children: React.ReactNode, className?: string, colSpan?: number }) {
+    return <th colSpan={className?.includes("colSpan") ? undefined : undefined} className={`h-12 px-4 text-left align-middle font-medium text-obsidian/60 [&:has([role=checkbox])]:pr-0 ${className}`}>{children}</th>
 }
 
-function TableCell({ children, className }: { children: React.ReactNode, className?: string }) {
-    return <td className={`p-4 align-middle [&:has([role=checkbox])]:pr-0 text-obsidian ${className}`}>{children}</td>
+function TableCell({ children, className, colSpan }: { children: React.ReactNode, className?: string, colSpan?: number }) {
+    return <td colSpan={colSpan} className={`p-4 align-middle [&:has([role=checkbox])]:pr-0 text-obsidian ${className}`}>{children}</td>
 }

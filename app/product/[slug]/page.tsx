@@ -4,63 +4,22 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ProductActions } from "@/components/shop/product-actions";
+import { getProductBySlug } from "@/lib/shop-actions";
 
-// Mock Data (duplicated from shop for now, ideally in a lib or DB)
-const MOCK_PRODUCTS = [
-    {
-        id: "1",
-        name: "Obsidian Trench Coat",
-        price: 850,
-        category: "Outerwear",
-        slug: "obsidian-trench-coat",
-        image: "/assets/brand-campaign-1.jpg",
-        description: "A masterclass in tailoring. The Obsidian Trench Coat is crafted from premium Italian wool blend, featuring a structured silhouette that commands attention while remaining effortlessly understated. Finished with horn buttons and a silk lining.",
-        sizes: ["S", "M", "L", "XL"],
-    },
-    {
-        id: "2",
-        name: "Silk Essence Dress",
-        price: 450,
-        category: "Dresses",
-        slug: "silk-essence-dress",
-        image: "/assets/brand-campaign-2.jpg",
-        description: "Fluidity in motion. This pure silk slip dress drapes elegantly against the body, offering a lustrous sheen and unparalleled comfort. Designed for evening soirées or elevated daywear.",
-        sizes: ["XS", "S", "M", "L"],
-    },
-    {
-        id: "3",
-        name: "Minimalist Leather Tote",
-        price: 320,
-        category: "Accessories",
-        slug: "minimalist-leather-tote",
-        image: "https://images.unsplash.com/photo-1591561954557-26941169b49e?q=80&w=1000&auto=format&fit=crop",
-        description: "Function meets form. Crafted from full-grain vegetable-tanned leather, this tote features a spacious interior and minimal hardware. It develops a unique patina over time.",
-        sizes: ["One Size"],
-    },
-    // ... add others if needed, for now just handling cases to not crash
-];
+export const dynamic = 'force-dynamic';
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = await params;
-    const product = MOCK_PRODUCTS.find((p) => p.slug === slug);
+    const product = await getProductBySlug(slug);
 
     if (!product) {
-        // Fallback for demo purposes if not in map
-        if (slug) {
-            return (
-                <div className="min-h-screen flex items-center justify-center bg-cream">
-                    <div className="text-center">
-                        <h1 className="text-2xl font-serif text-obsidian mb-4">Product Not Found</h1>
-                        <p className="mb-6 text-obsidian/60">We couldn't find the product you're looking for.</p>
-                        <Link href="/shop">
-                            <Button>Back to Shop</Button>
-                        </Link>
-                    </div>
-                </div>
-            )
-        }
         return notFound();
     }
+
+    // Map DB product to the shape expected by UI/Actions
+    // Note: DB has images[], UI mostly uses one image for main view currently
+    const mainImage = product.images?.[0] || "/assets/placeholder.jpg";
+    const price = Number(product.price);
 
     return (
         <div className="min-h-screen bg-cream pt-10 pb-24">
@@ -79,7 +38,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                     <div className="space-y-4">
                         <div className="relative aspect-[3/4] w-full overflow-hidden bg-beige/20 rounded-sm">
                             <Image
-                                src={product.image}
+                                src={mainImage}
                                 alt={product.name}
                                 fill
                                 className="object-cover"
@@ -87,20 +46,38 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                                 sizes="(max-width: 1024px) 100vw, 50vw"
                             />
                         </div>
-                        {/* Thumbnail grid would go here */}
+                        {/* Thumbnail grid would go here if we had more images */}
+                        {product.images.length > 1 && (
+                            <div className="grid grid-cols-4 gap-4">
+                                {product.images.map((img: string, idx: number) => (
+                                    <div key={idx} className="relative aspect-square bg-beige/10 overflow-hidden cursor-pointer">
+                                        <Image src={img} alt={`${product.name} ${idx}`} fill className="object-cover" />
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
 
                     {/* Product Info (Right) */}
                     <div className="flex flex-col justify-center">
-                        <span className="text-sm uppercase tracking-widest text-[#C2A891] mb-2">{product.category}</span>
+                        <span className="text-sm uppercase tracking-widest text-[#C2A891] mb-2">
+                            {product.category?.name || "Collection"}
+                        </span>
                         <h1 className="text-4xl md:text-5xl font-serif text-obsidian mb-6">{product.name}</h1>
-                        <p className="text-2xl font-light text-obsidian mb-8">₦{product.price.toLocaleString()}</p>
+                        <p className="text-2xl font-light text-obsidian mb-8">₦{price.toLocaleString()}</p>
 
                         <div className="prose prose-stone prose-lg text-obsidian/70 font-light mb-10">
                             <p>{product.description}</p>
                         </div>
 
-                        <ProductActions product={product} />
+                        <ProductActions product={{
+                            id: product.id,
+                            slug: product.slug,
+                            name: product.name,
+                            price: price,
+                            image: mainImage,
+                            sizes: product.sizes
+                        }} />
 
                         {/* Value Props */}
                         <div className="grid grid-cols-2 gap-6 pt-8 border-t border-beige/30">
