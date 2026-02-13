@@ -8,7 +8,7 @@ import { ArrowLeft, Lock, CreditCard, ShoppingBag, Loader2 } from "lucide-react"
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { usePaystackPayment } from "react-paystack";
+import { usePaystackPayment } from "@/hooks/use-paystack";
 
 import { AuthModal } from "@/app/checkout/auth-modal";
 
@@ -97,7 +97,10 @@ export default function CheckoutInner({ user }: { user?: any }) {
         publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || "",
     };
 
-    const initializePayment = usePaystackPayment(config);
+    const initializePayment = usePaystackPayment({
+        ...config,
+        publicKey: config.publicKey // Ensure prop name matches
+    });
 
     const onSuccess = (reference: any) => {
         // Verify payment on server (optional for MVP, usually required)
