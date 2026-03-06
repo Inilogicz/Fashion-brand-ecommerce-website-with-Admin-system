@@ -191,3 +191,119 @@ export async function deleteCategory(id: string) {
         return { message: "Database Error: Failed to delete category. Ensure no products are linked." };
     }
 }
+const collectionSchema = z.object({
+    name: z.string().min(1),
+    description: z.string().optional(),
+    image: z.string().optional(),
+    isFeatured: z.string().optional(), // form values are strings
+    productIds: z.string().optional(), // Comma separated IDs
+});
+
+export async function createCollection(prevState: any, formData: FormData) {
+    const rawData = {
+        name: formData.get("name"),
+        description: formData.get("description"),
+        image: formData.get("image"),
+        isFeatured: formData.get("isFeatured"),
+        productIds: formData.get("productIds"),
+    };
+
+    const validatedData = collectionSchema.safeParse(rawData);
+
+    if (!validatedData.success) {
+        return {
+            message: "Validation Error",
+            errors: validatedData.error.flatten().fieldErrors,
+        };
+    }
+
+    const { name, description, image, isFeatured, productIds } = validatedData.data;
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") + "-" + Date.now();
+
+    try {
+        await prisma.collection.create({
+            data: {
+                name,
+                description,
+                slug,
+                image,
+                isFeatured: isFeatured === "on",
+                products: {
+                    connect: productIds ? productIds.split(",").map(id => ({ id })) : []
+                }
+            },
+        });
+    } catch (error) {
+        console.error(error);
+        return {
+            message: "Database Error: Failed to create collection.",
+        };
+    }
+
+    revalidatePath("/admin/collections");
+    revalidatePath("/collections");
+    redirect("/admin/collections");
+}
+
+export async function updateCollection(
+    id: string,
+    prevState: any,
+    formData: FormData
+) {
+    const rawData = {
+        name: formData.get("name"),
+        description: formData.get("description"),
+        image: formData.get("image"),
+        isFeatured: formData.get("isFeatured"),
+        productIds: formData.get("productIds"),
+    };
+
+    const validatedData = collectionSchema.safeParse(rawData);
+
+    if (!validatedData.success) {
+        return {
+            message: "Validation Error",
+            errors: validatedData.error.flatten().fieldErrors,
+        };
+    }
+
+    const { name, description, image, isFeatured, productIds } = validatedData.data;
+
+    try {
+        await prisma.collection.update({
+            where: { id },
+            data: {
+                name,
+                description,
+                image,
+                isFeatured: isFeatured === "on",
+                products: {
+                    set: productIds ? productIds.split(",").map(id => ({ id })) : []
+                }
+            },
+        });
+    } catch (error) {
+        console.error(error);
+        return {
+            message: "Database Error: Failed to update collection.",
+        };
+    }
+
+    revalidatePath("/admin/collections");
+    revalidatePath(`/admin/collections/${id}`);
+    revalidatePath("/collections");
+    redirect("/admin/collections");
+}
+
+export async function deleteCollection(id: string) {
+    try {
+        await prisma.collection.delete({
+            where: { id },
+        });
+        revalidatePath("/admin/collections");
+        revalidatePath("/collections");
+        return { message: "Deleted Collection" };
+    } catch (error) {
+        return { message: "Database Error: Failed to delete collection." };
+    }
+}

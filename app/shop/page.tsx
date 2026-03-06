@@ -1,19 +1,23 @@
-import { getAllCategories, getProducts } from "@/lib/shop-actions";
+import { getAllCategories, getProducts, getCollectionBySlug } from "@/lib/shop-actions";
 import { ShopClient } from "@/components/shop/shop-client";
 
 export const dynamic = 'force-dynamic';
 
-export default async function ShopPage({ searchParams }: { searchParams: Promise<{ category?: string }> }) {
-    const { category } = await searchParams;
+export default async function ShopPage({ searchParams }: { searchParams: Promise<{ category?: string; collection?: string }> }) {
+    const { category, collection: collectionSlug } = await searchParams;
 
-    // If we have a category, we need to map slug back to ID? 
-    // Wait, getProducts takes slug, so that's fine.
+    const [products, categories, currentCollection] = await Promise.all([
+        getProducts(category, collectionSlug),
+        getAllCategories(),
+        collectionSlug ? getCollectionBySlug(collectionSlug) : Promise.resolve(null)
+    ]);
 
     return (
         <ShopClient
-            products={await getProducts(category)}
-            categories={await getAllCategories()}
+            products={products}
+            categories={categories}
             currentCategory={category || 'all'}
+            currentCollection={currentCollection}
         />
     );
 }

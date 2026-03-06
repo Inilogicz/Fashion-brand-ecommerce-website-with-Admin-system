@@ -99,14 +99,26 @@ export function HomeClient({ featuredProducts, collections }: HomeClientProps) {
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: true }}
                                     transition={{ duration: 0.8, delay: 0.2 + (idx * 0.2) }}
-                                    className={`relative aspect-[3/4] bg-beige/20 overflow-hidden ${idx === 0 ? 'mt-12' : 'mb-12'}`}
+                                    className={`relative aspect-[3/4] bg-beige/20 overflow-hidden shadow-xl ${idx === 0 ? 'mt-12' : 'mb-12'}`}
                                 >
-                                    {/* Placeholder image logic since Categories don't have images yet */}
-                                    <div className="absolute inset-0 flex items-center justify-center bg-beige/30 text-obsidian/50">
-                                        {col.name}
+                                    {col.image ? (
+                                        <Image
+                                            src={col.image}
+                                            alt={col.name}
+                                            fill
+                                            className="object-cover transition-transform duration-700 hover:scale-110"
+                                        />
+                                    ) : (
+                                        <div className="absolute inset-0 flex items-center justify-center bg-beige/30 text-obsidian/20 font-serif text-xl uppercase tracking-tighter p-4 text-center">
+                                            {col.name}
+                                        </div>
+                                    )}
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500 flex flex-col justify-end p-6">
+                                        <p className="text-cream text-xs uppercase tracking-widest mb-1">{col.name}</p>
+                                        <Link href={`/shop?collection=${col.slug}`} className="text-cream/70 text-[10px] hover:text-white transition-colors underline underline-offset-4">
+                                            View Collection
+                                        </Link>
                                     </div>
-                                    {/* If we had an image field, we'd use Next Image here */}
-                                    {/* <Image src={col.image} alt={col.name} fill className="object-cover..." /> */}
                                 </motion.div>
                             ))}
                         </div>

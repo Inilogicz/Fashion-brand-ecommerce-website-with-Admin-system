@@ -13,6 +13,9 @@ export function Navbar({ user }: { user?: any }) {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const { cartCount, setIsCartOpen } = useCart();
 
+    // Do not show client navbar on admin pages
+    if (pathname?.startsWith("/admin")) return null;
+
     const links = [
         { href: "/shop", label: "Shop" },
         { href: "/collections", label: "Collections" },

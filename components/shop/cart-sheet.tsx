@@ -5,11 +5,14 @@ import { Button } from "@/components/ui/button";
 import { X, Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
 
 export function CartDrawer() {
     const { items, removeItem, updateQuantity, cartTotal, isCartOpen, setIsCartOpen } = useCart();
+    const pathname = usePathname();
+
+    if (pathname?.startsWith("/admin")) return null;
 
     return (
         <AnimatePresence>

@@ -10,9 +10,10 @@ interface ShopClientProps {
     products: any[];
     categories: any[];
     currentCategory: string; // slug
+    currentCollection?: any; // collection object
 }
 
-export function ShopClient({ products, categories, currentCategory }: ShopClientProps) {
+export function ShopClient({ products, categories, currentCategory, currentCollection }: ShopClientProps) {
     const router = useRouter();
 
     return (
@@ -20,10 +21,30 @@ export function ShopClient({ products, categories, currentCategory }: ShopClient
             {/* Header */}
             <div className="bg-cream pt-24 pb-12 px-6 border-b border-beige/20">
                 <div className="max-w-7xl mx-auto text-center">
-                    <h1 className="text-4xl md:text-5xl font-serif text-obsidian mb-4">The Collection</h1>
+                    <h1 className="text-4xl md:text-5xl font-serif text-obsidian mb-4">
+                        {currentCollection ? currentCollection.name : "The Collection"}
+                    </h1>
                     <p className="text-obsidian/60 max-w-2xl mx-auto font-light text-lg">
-                        Timeless pieces designed for longevity and effortless elegance.
+                        {currentCollection
+                            ? (currentCollection.description || "Experimental narratives and silhouettes designed for the contemporary explorer.")
+                            : "Timeless pieces designed for longevity and effortless elegance."
+                        }
                     </p>
+
+                    {currentCollection && (
+                        <div className="mt-8 flex justify-center gap-4">
+                            <Link href="/collections">
+                                <Button variant="outline" size="sm" className="rounded-full border-obsidian/20 text-obsidian/80 px-6">
+                                    Browse All Collections
+                                </Button>
+                            </Link>
+                            <Link href="/shop">
+                                <Button variant="ghost" size="sm" className="rounded-full text-obsidian/60 hover:text-obsidian px-6">
+                                    Shop All Products
+                                </Button>
+                            </Link>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -31,22 +52,25 @@ export function ShopClient({ products, categories, currentCategory }: ShopClient
                 {/* Filters */}
                 <div className="flex flex-col md:flex-row justify-between items-center mb-12 gap-6">
                     <div className="flex flex-wrap justify-center gap-2">
-                        <Link href="/shop">
+                        <Link href={currentCollection ? `/shop?collection=${currentCollection.slug}` : "/shop"}>
                             <button
                                 className={`text-sm px-4 py-2 rounded-full transition-all duration-300 ${currentCategory === 'all' || !currentCategory
-                                        ? "bg-obsidian text-cream"
-                                        : "bg-transparent text-obsidian/60 hover:text-obsidian border border-transparent hover:border-obsidian/10"
+                                    ? "bg-obsidian text-cream"
+                                    : "bg-transparent text-obsidian/60 hover:text-obsidian border border-transparent hover:border-obsidian/10"
                                     }`}
                             >
                                 All
                             </button>
                         </Link>
                         {categories.map((cat) => (
-                            <Link key={cat.id} href={`/shop?category=${cat.slug}`}>
+                            <Link
+                                key={cat.id}
+                                href={`/shop?category=${cat.slug}${currentCollection ? `&collection=${currentCollection.slug}` : ""}`}
+                            >
                                 <button
                                     className={`text-sm px-4 py-2 rounded-full transition-all duration-300 ${currentCategory === cat.slug
-                                            ? "bg-obsidian text-cream"
-                                            : "bg-transparent text-obsidian/60 hover:text-obsidian border border-transparent hover:border-obsidian/10"
+                                        ? "bg-obsidian text-cream"
+                                        : "bg-transparent text-obsidian/60 hover:text-obsidian border border-transparent hover:border-obsidian/10"
                                         }`}
                                 >
                                     {cat.name}

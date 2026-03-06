@@ -35,15 +35,18 @@ export const getFeaturedProducts = cache(async () => {
 
 export const getCollections = cache(async () => {
     try {
-        // Fetch categories that have products or just all categories
-        const categories = await prisma.category.findMany({
-            orderBy: { name: 'asc' },
-            take: 3 // Limit for homepage
+        const collections = await (prisma as any).collection.findMany({
+            orderBy: { createdAt: 'desc' },
+            include: {
+                _count: {
+                    select: { products: true }
+                }
+            }
         });
-        return categories.map(cat => ({
-            ...cat,
-            createdAt: cat.createdAt?.toISOString(),
-            updatedAt: cat.updatedAt?.toISOString(),
+        return collections.map((col: any) => ({
+            ...col,
+            createdAt: col.createdAt?.toISOString(),
+            updatedAt: col.updatedAt?.toISOString(),
         }));
     } catch (error) {
         console.error("Failed to fetch collections:", error);
@@ -66,11 +69,19 @@ export const getAllCategories = cache(async () => {
     }
 });
 
-export const getProducts = cache(async (categorySlug?: string) => {
+export const getProducts = cache(async (categorySlug?: string, collectionSlug?: string) => {
     try {
-        const where = categorySlug && categorySlug !== 'all'
-            ? { category: { slug: categorySlug } }
-            : {};
+        const where: any = {};
+
+        if (categorySlug && categorySlug !== 'all') {
+            where.category = { slug: categorySlug };
+        }
+
+        if (collectionSlug) {
+            where.collections = {
+                some: { slug: collectionSlug }
+            };
+        }
 
         const products = await prisma.product.findMany({
             where,
@@ -81,6 +92,23 @@ export const getProducts = cache(async (categorySlug?: string) => {
     } catch (error) {
         console.error("Failed to fetch products:", error);
         return [];
+    }
+});
+
+export const getCollectionBySlug = cache(async (slug: string) => {
+    try {
+        const collection = await (prisma as any).collection.findUnique({
+            where: { slug }
+        });
+        if (!collection) return null;
+        return {
+            ...collection,
+            createdAt: collection.createdAt?.toISOString(),
+            updatedAt: collection.updatedAt?.toISOString(),
+        };
+    } catch (error) {
+        console.error("Failed to fetch collection:", error);
+        return null;
     }
 });
 
